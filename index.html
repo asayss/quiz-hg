@@ -158,12 +158,26 @@
             transform: translateY(-2px);
         }
 
+        .action-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
         .action-btn.delete {
             background: #e74c3c;
         }
 
         .action-btn.delete:hover {
             background: #c0392b;
+        }
+
+        .action-btn.completed {
+            background: #27ae60;
+        }
+
+        .action-btn.completed:hover {
+            background: #219a52;
         }
 
         .result-badge {
@@ -502,6 +516,7 @@
             font-size: 16px;
             text-align: center;
             transition: all 0.3s;
+            position: relative;
         }
 
         .domain-btn.cognitive {
@@ -521,6 +536,38 @@
 
         .domain-btn:hover {
             transform: translateY(-2px);
+        }
+
+        .domain-btn:disabled {
+            background: #bdc3c7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .domain-btn .completed-mark {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #27ae60;
+            color: white;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .quiz-completed-message {
+            background: #d4edda;
+            color: #155724;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid #c3e6cb;
+            text-align: center;
+            font-weight: bold;
         }
 
         /* Print styles */
@@ -727,44 +774,18 @@
             </div>
             <div class="stats-grid">
                 <div>
-                    <h3 style="text-align: center; margin-bottom: 15px; color: #2c3e50;">إحصائيات المجال المعرفي</h3>
+                    <h3 style="text-align: center; margin-bottom: 15px; color: #2c3e50;">إحصائيات النتائج حسب المجالات</h3>
                     <table class="stats-table">
                         <thead>
                             <tr>
-                                <th>المستوى</th>
-                                <th>العدد</th>
-                                <th>النسبة</th>
+                                <th>المجال</th>
+                                <th>متحكم</th>
+                                <th>متحكم نسبياً</th>
+                                <th>غير متحكم</th>
+                                <th>المجموع</th>
                             </tr>
                         </thead>
-                        <tbody id="cognitiveStats">
-                        </tbody>
-                    </table>
-                </div>
-                <div>
-                    <h3 style="text-align: center; margin-bottom: 15px; color: #2c3e50;">إحصائيات المجال المهاري</h3>
-                    <table class="stats-table">
-                        <thead>
-                            <tr>
-                                <th>المستوى</th>
-                                <th>العدد</th>
-                                <th>النسبة</th>
-                            </tr>
-                        </thead>
-                        <tbody id="skillsStats">
-                        </tbody>
-                    </table>
-                </div>
-                <div>
-                    <h3 style="text-align: center; margin-bottom: 15px; color: #2c3e50;">إحصائيات المجال الوجداني</h3>
-                    <table class="stats-table">
-                        <thead>
-                            <tr>
-                                <th>المستوى</th>
-                                <th>العدد</th>
-                                <th>النسبة</th>
-                            </tr>
-                        </thead>
-                        <tbody id="emotionalStats">
+                        <tbody id="combinedStats">
                         </tbody>
                     </table>
                 </div>
@@ -922,13 +943,18 @@
 
             students.forEach((student, index) => {
                 const row = document.createElement('tr');
+                const allCompleted = student.cognitive !== null && student.skills !== null && student.emotional !== null;
+                
                 row.innerHTML = `
                     <td>${student.name}</td>
                     <td>${getResultBadge(student.cognitive)}</td>
                     <td>${getResultBadge(student.skills)}</td>
                     <td>${getResultBadge(student.emotional)}</td>
                     <td>
-                        <button class="action-btn" onclick="startQuiz(${index})">إنجاز</button>
+                        ${allCompleted ? 
+                            `<button class="action-btn completed" disabled>مكتمل</button>` :
+                            `<button class="action-btn" onclick="startQuiz(${index})">إنجاز</button>`
+                        }
                         <button class="action-btn delete" onclick="deleteStudent(${index})">حذف</button>
                     </td>
                 `;
@@ -936,500 +962,477 @@
             });
         }
 
-        // إنشاء شارة النتيجة
-        function getResultBadge(score) {
-            if (score === null) return '-';
-            
-            let level, className;
-            const totalQuestions = 4; // عدد الأسئلة لكل مجال
-            const threshold1 = Math.ceil(totalQuestions * 0.7); // 70% للمتحكم
-            const threshold2 = Math.ceil(totalQuestions * 0.5); // 50% للمتحكم نسبياً
-            
-            if (score >= threshold1) {
-                level = 'متحكم';
-                className = 'متحكم';
-            } else if (score >= threshold2) {
-                level = 'متحكم نسبياً';
-                className = 'متحكم-نسبيا';
-            } else {
-                level = 'غير متحكم';
-                className = 'غير-متحكم';
-            }
-            
-            return `<span class="result-badge ${className}">${level}</span>`;
-        }
+       // إنشاء شارة النتيجة
+       function getResultBadge(score) {
+           if (score === null) return '-';
+           
+           let result = '';
+           let className = '';
+           
+           if (score >= 75) {
+               result = 'متحكم';
+               className = 'متحكم';
+           } else if (score >= 50) {
+               result = 'متحكم نسبياً';
+               className = 'متحكم-نسبيا';
+           } else {
+               result = 'غير متحكم';
+               className = 'غير-متحكم';
+           }
+           
+           return `<span class="result-badge ${className}">${result} (${score}%)</span>`;
+       }
 
-        // حذف تلميذ
-        function deleteStudent(index) {
-            if (confirm('هل تريد حذف هذا التلميذ؟')) {
-                students.splice(index, 1);
-                updateStudentsTable();
-                debouncedSave();
-            }
-        }
+       // حذف تلميذ
+       function deleteStudent(index) {
+           if (confirm('هل أنت متأكد من حذف هذا التلميذ؟')) {
+               students.splice(index, 1);
+               updateStudentsTable();
+               debouncedSave();
+           }
+       }
 
-        // بدء الاختبار
-        function startQuiz(studentIndex) {
-            currentStudentIndex = studentIndex;
-            showDomainSelection();
-        }
+       // بداية الاختبار
+       function startQuiz(studentIndex) {
+           currentStudentIndex = studentIndex;
+           const student = students[studentIndex];
+           
+           // إنشاء نافذة اختيار المجال
+           const quizContainer = document.getElementById('quizContainer');
+           const quizContent = document.querySelector('.quiz-content');
+           
+           quizContent.innerHTML = `
+               <button class="close-btn" onclick="closeQuiz()">×</button>
+               <div class="quiz-header">
+                   <h2>اختر المجال للتلميذ: ${student.name}</h2>
+               </div>
+               <div class="domain-selection">
+                   <button class="domain-btn cognitive" onclick="selectDomain('cognitive')" ${student.cognitive !== null ? 'disabled' : ''}>
+                       المجال المعرفي
+                       ${student.cognitive !== null ? '<span class="completed-mark">✓</span>' : ''}
+                   </button>
+                   <button class="domain-btn skills" onclick="selectDomain('skills')" ${student.skills !== null ? 'disabled' : ''}>
+                       المجال المهاري
+                       ${student.skills !== null ? '<span class="completed-mark">✓</span>' : ''}
+                   </button>
+                   <button class="domain-btn emotional" onclick="selectDomain('emotional')" ${student.emotional !== null ? 'disabled' : ''}>
+                       المجال الوجداني
+                       ${student.emotional !== null ? '<span class="completed-mark">✓</span>' : ''}
+                   </button>
+               </div>
+           `;
+           
+           quizContainer.style.display = 'block';
+       }
 
-        // إظهار اختيار المجال
-        function showDomainSelection() {
-            const quizContainer = document.getElementById('quizContainer');
-            const quizContent = document.querySelector('.quiz-content');
-            
-            quizContent.innerHTML = `
-                <button class="close-btn" onclick="closeQuiz()">×</button>
-                <div class="quiz-header">
-                    <h2>اختر المجال للتلميذ: ${students[currentStudentIndex].name}</h2>
-                </div>
-                <div class="domain-selection">
-                    <button class="domain-btn cognitive" onclick="selectDomain('cognitive')">
-                        المجال المعرفي
-                    </button>
-                    <button class="domain-btn skills" onclick="selectDomain('skills')">
-                        المجال المهاري
-                    </button>
-                    <button class="domain-btn emotional" onclick="selectDomain('emotional')">
-                        المجال الوجداني
-                    </button>
-                </div>
-            `;
-            
-            quizContainer.style.display = 'block';
-        }
+       // اختيار المجال
+       function selectDomain(domain) {
+           currentDomain = domain;
+           currentQuestionIndex = 0;
+           answers = [];
+           
+           // خلط الأسئلة عشوائياً
+           randomizedQuestions = shuffleArray(questionsBank[domain]);
+           
+           initializeQuiz();
+       }
 
-        // اختيار المجال
-        function selectDomain(domain) {
-            currentDomain = domain;
-            currentQuestionIndex = 0;
-            answers = [];
-            
-            // خلط الأسئلة عشوائياً
-            randomizedQuestions = shuffleArray(questionsBank[domain]);
-            
-            setupQuiz();
-            displayQuestion();
-        }
+       // تهيئة الاختبار
+       function initializeQuiz() {
+           const quizContent = document.querySelector('.quiz-content');
+           const domainNames = {
+               cognitive: 'المجال المعرفي',
+               skills: 'المجال المهاري',
+               emotional: 'المجال الوجداني'
+           };
+           
+           quizContent.innerHTML = `
+               <button class="close-btn" onclick="closeQuiz()">×</button>
+               <div class="domain-indicator" id="domainIndicator">${domainNames[currentDomain]}</div>
+               <div class="quiz-header">
+                   <h2 id="quizTitle">اختبار ${domainNames[currentDomain]} - ${students[currentStudentIndex].name}</h2>
+                   <div class="quiz-progress">
+                       <div class="quiz-progress-bar" id="progressBar"></div>
+                   </div>
+               </div>
+               <div id="quizQuestions"></div>
+               <div class="quiz-navigation">
+                   <button class="nav-btn prev-btn" id="prevBtn" onclick="previousQuestion()">السابق</button>
+                   <button class="nav-btn next-btn" id="nextBtn" onclick="nextQuestion()">التالي</button>
+                   <button class="nav-btn finish-btn" id="finishBtn" onclick="finishQuiz()" style="display: none;">إنهاء الاختبار</button>
+               </div>
+           `;
+           
+           displayQuestion();
+       }
 
-        // إعداد الاختبار
-        function setupQuiz() {
-            const quizContainer = document.getElementById('quizContainer');
-            const quizContent = document.querySelector('.quiz-content');
-            
-            let domainName = '';
-            switch(currentDomain) {
-                case 'cognitive': domainName = 'المجال المعرفي'; break;
-                case 'skills': domainName = 'المجال المهاري'; break;
-                case 'emotional': domainName = 'المجال الوجداني'; break;
-            }
-            
-            quizContent.innerHTML = `
-                <button class="close-btn" onclick="closeQuiz()">×</button>
-                <div class="domain-indicator" id="domainIndicator">${domainName}</div>
-                <div class="quiz-header">
-                    <h2 id="quizTitle">اختبار ${domainName} - ${students[currentStudentIndex].name}</h2>
-                    <div class="quiz-progress">
-                        <div class="quiz-progress-bar" id="progressBar"></div>
-                    </div>
-                </div>
-                <div id="quizQuestions"></div>
-                <div class="quiz-navigation">
-                    <button class="nav-btn prev-btn" id="prevBtn" onclick="previousQuestion()">السابق</button>
-                    <button class="nav-btn next-btn" id="nextBtn" onclick="nextQuestion()">التالي</button>
-                    <button class="nav-btn finish-btn" id="finishBtn" onclick="finishQuiz()" style="display: none;">إنهاء الاختبار</button>
-                </div>
-            `;
-            
-            quizContainer.style.display = 'block';
-        }
+       // عرض السؤال
+       function displayQuestion() {
+           const questionsContainer = document.getElementById('quizQuestions');
+           const question = randomizedQuestions[currentQuestionIndex];
+           const progressBar = document.getElementById('progressBar');
+           const prevBtn = document.getElementById('prevBtn');
+           const nextBtn = document.getElementById('nextBtn');
+           const finishBtn = document.getElementById('finishBtn');
+           
+           // تحديث شريط التقدم
+           const progress = ((currentQuestionIndex + 1) / randomizedQuestions.length) * 100;
+           progressBar.style.width = progress + '%';
+           
+           // عرض السؤال
+           questionsContainer.innerHTML = `
+               <div class="question-container">
+                   <div class="question-title">السؤال ${currentQuestionIndex + 1} من ${randomizedQuestions.length}</div>
+                   <div class="question">
+                       <h4>${question.question}</h4>
+                       <div class="options">
+                           ${question.options.map((option, index) => `
+                               <div class="option ${answers[currentQuestionIndex] === index ? 'selected' : ''}" 
+                                    onclick="selectAnswer(${index})">
+                                   ${option}
+                               </div>
+                           `).join('')}
+                       </div>
+                   </div>
+               </div>
+           `;
+           
+           // تحديث أزرار التنقل
+           prevBtn.disabled = currentQuestionIndex === 0;
+           
+           if (currentQuestionIndex === randomizedQuestions.length - 1) {
+               nextBtn.style.display = 'none';
+               finishBtn.style.display = 'block';
+           } else {
+               nextBtn.style.display = 'block';
+               finishBtn.style.display = 'none';
+           }
+       }
 
-        // عرض السؤال
-        function displayQuestion() {
-            const questionsContainer = document.getElementById('quizQuestions');
-            const question = randomizedQuestions[currentQuestionIndex];
-            
-            questionsContainer.innerHTML = `
-                <div class="question-container">
-                    <div class="question-title">السؤال ${currentQuestionIndex + 1} من ${randomizedQuestions.length}</div>
-                    <div class="question">
-                        <h4>${question.question}</h4>
-                        <div class="options">
-                            ${question.options.map((option, index) => `
-                                <div class="option" onclick="selectOption(${index})" data-index="${index}">
-                                    ${option}
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            // تحديث شريط التقدم
-            const progress = ((currentQuestionIndex + 1) / randomizedQuestions.length) * 100;
-            document.getElementById('progressBar').style.width = progress + '%';
-            
-            // تحديث أزرار التنقل
-            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
-            document.getElementById('nextBtn').style.display = currentQuestionIndex === randomizedQuestions.length - 1 ? 'none' : 'block';
-            document.getElementById('finishBtn').style.display = currentQuestionIndex === randomizedQuestions.length - 1 ? 'block' : 'none';
-            
-            // إظهار الإجابة المحددة سابقاً إن وجدت
-            if (answers[currentQuestionIndex] !== undefined) {
-                const selectedOption = document.querySelector(`[data-index="${answers[currentQuestionIndex]}"]`);
-                if (selectedOption) {
-                    selectedOption.classList.add('selected');
-                }
-            }
-        }
+       // اختيار الإجابة
+       function selectAnswer(optionIndex) {
+           answers[currentQuestionIndex] = optionIndex;
+           
+           // تحديث العرض
+           const options = document.querySelectorAll('.option');
+           options.forEach((option, index) => {
+               option.classList.remove('selected');
+               if (index === optionIndex) {
+                   option.classList.add('selected');
+               }
+           });
+       }
 
-        // اختيار الإجابة
-        function selectOption(optionIndex) {
-            // إزالة التحديد السابق
-            document.querySelectorAll('.option').forEach(option => {
-                option.classList.remove('selected');
-            });
-            
-            // تحديد الإجابة الجديدة
-            document.querySelector(`[data-index="${optionIndex}"]`).classList.add('selected');
-            
-            // حفظ الإجابة
-            answers[currentQuestionIndex] = optionIndex;
-        }
+       // السؤال السابق
+       function previousQuestion() {
+           if (currentQuestionIndex > 0) {
+               currentQuestionIndex--;
+               displayQuestion();
+           }
+       }
 
-        // السؤال التالي
-        function nextQuestion() {
-            if (currentQuestionIndex < randomizedQuestions.length - 1) {
-                currentQuestionIndex++;
-                displayQuestion();
-            }
-        }
+       // السؤال التالي
+       function nextQuestion() {
+           if (currentQuestionIndex < randomizedQuestions.length - 1) {
+               currentQuestionIndex++;
+               displayQuestion();
+           }
+       }
 
-        // السؤال السابق
-        function previousQuestion() {
-            if (currentQuestionIndex > 0) {
-                currentQuestionIndex--;
-                displayQuestion();
-            }
-        }
+       // إنهاء الاختبار
+       function finishQuiz() {
+           // حساب النتيجة
+           let score = 0;
+           for (let i = 0; i < randomizedQuestions.length; i++) {
+               if (answers[i] === randomizedQuestions[i].correct) {
+                   score++;
+               }
+           }
+           
+           const percentage = Math.round((score / randomizedQuestions.length) * 100);
+           
+           // حفظ النتيجة
+           students[currentStudentIndex][currentDomain] = percentage;
+           
+           // عرض النتيجة
+           const quizContent = document.querySelector('.quiz-content');
+           const domainNames = {
+               cognitive: 'المجال المعرفي',
+               skills: 'المجال المهاري',
+               emotional: 'المجال الوجداني'
+           };
+           
+           let resultMessage = '';
+           if (percentage >= 75) {
+               resultMessage = 'ممتاز! متحكم في هذا المجال';
+           } else if (percentage >= 50) {
+               resultMessage = 'جيد! متحكم نسبياً في هذا المجال';
+           } else {
+               resultMessage = 'يحتاج إلى تحسين في هذا المجال';
+           }
+           
+           quizContent.innerHTML = `
+               <button class="close-btn" onclick="closeQuiz()">×</button>
+               <div class="quiz-header">
+                   <h2>انتهى الاختبار</h2>
+               </div>
+               <div class="quiz-completed-message">
+                   <h3>التلميذ: ${students[currentStudentIndex].name}</h3>
+                   <h4>المجال: ${domainNames[currentDomain]}</h4>
+                   <p>النتيجة: ${score} من ${randomizedQuestions.length} (${percentage}%)</p>
+                   <p>${resultMessage}</p>
+               </div>
+               <div style="text-align: center; margin-top: 20px;">
+                   <button class="nav-btn finish-btn" onclick="closeQuiz()">إغلاق</button>
+               </div>
+           `;
+           
+           // تحديث الجدول وحفظ البيانات
+           updateStudentsTable();
+           debouncedSave();
+       }
 
-        // إنهاء الاختبار
-        function finishQuiz() {
-            // حساب النتيجة
-            let score = 0;
-            for (let i = 0; i < answers.length; i++) {
-                if (answers[i] === randomizedQuestions[i].correct) {
-                    score++;
-                }
-            }
-            
-            // حفظ النتيجة
-            students[currentStudentIndex][currentDomain] = score;
-            
-            // إظهار النتيجة
-            alert(`تم الانتهاء من الاختبار!\nالنتيجة: ${score} من ${randomizedQuestions.length}`);
-            
-            closeQuiz();
-            updateStudentsTable();
-            debouncedSave();
-        }
+       // إغلاق الاختبار
+       function closeQuiz() {
+           document.getElementById('quizContainer').style.display = 'none';
+       }
 
-        // إغلاق الاختبار
-        function closeQuiz() {
-            document.getElementById('quizContainer').style.display = 'none';
-            currentQuiz = null;
-            currentStudentIndex = -1;
-            currentQuestionIndex = 0;
-            currentDomain = '';
-            answers = [];
-            randomizedQuestions = [];
-        }
+       // تصدير إلى Excel
+       function exportToExcel() {
+           const collegeName = document.getElementById('collegeName').value || 'غير محدد';
+           const teacherName = document.getElementById('teacherName').value || 'غير محدد';
+           const className = document.getElementById('className').value || 'غير محدد';
+           
+           const data = students.map(student => ({
+               'اسم التلميذ': student.name,
+               'المجال المعرفي': student.cognitive !== null ? `${student.cognitive}%` : 'لم يتم الإنجاز',
+               'المجال المهاري': student.skills !== null ? `${student.skills}%` : 'لم يتم الإنجاز',
+               'المجال الوجداني': student.emotional !== null ? `${student.emotional}%` : 'لم يتم الإنجاز',
+               'حالة المعرفي': student.cognitive !== null ? getResultText(student.cognitive) : 'لم يتم الإنجاز',
+               'حالة المهاري': student.skills !== null ? getResultText(student.skills) : 'لم يتم الإنجاز',
+               'حالة الوجداني': student.emotional !== null ? getResultText(student.emotional) : 'لم يتم الإنجاز'
+           }));
+           
+           const ws = XLSX.utils.json_to_sheet(data);
+           const wb = XLSX.utils.book_new();
+           
+           // إضافة معلومات المؤسسة في الأعلى
+           const headerData = [
+               ['المؤسسة:', collegeName],
+               ['الأستاذ:', teacherName],
+               ['القسم:', className],
+               ['تاريخ التصدير:', new Date().toLocaleDateString('ar-MA')],
+               [''] // سطر فارغ
+           ];
+           
+           XLSX.utils.sheet_add_aoa(ws, headerData, { origin: 'A1' });
+           XLSX.utils.sheet_add_json(ws, data, { origin: 'A6' });
+           
+           XLSX.utils.book_append_sheet(wb, ws, 'نتائج الرائز');
+           XLSX.writeFile(wb, `رائز_الاجتماعيات_${className}_${new Date().toLocaleDateString('ar-MA')}.xlsx`);
+       }
 
-        // تصدير إلى Excel
-        function exportToExcel() {
-            const workbook = XLSX.utils.book_new();
-            
-            // إعداد البيانات
-            const data = [
-                ['اسم التلميذ', 'المجال المعرفي', 'المجال المهاري', 'المجال الوجداني', 'مستوى المعرفي', 'مستوى المهاري', 'مستوى الوجداني']
-            ];
-            
-            students.forEach(student => {
-                data.push([
-                    student.name,
-                    student.cognitive !== null ? student.cognitive : '-',
-                    student.skills !== null ? student.skills : '-',
-                    student.emotional !== null ? student.emotional : '-',
-                    getResultText(student.cognitive),
-                    getResultText(student.skills),
-                    getResultText(student.emotional)
-                ]);
-            });
-            
-            // إنشاء الورقة
-            const worksheet = XLSX.utils.aoa_to_sheet(data);
-            XLSX.utils.book_append_sheet(workbook, worksheet, 'النتائج');
-            
-            // إضافة معلومات الأستاذ والقسم
-            const institutionData = [
-                ['المؤسسة', document.getElementById('collegeName').value || '-'],
-                ['الأستاذ', document.getElementById('teacherName').value || '-'],
-                ['القسم', document.getElementById('className').value || '-'],
-                ['تاريخ التصدير', new Date().toLocaleDateString('ar-MA')]
-            ];
-            
-            const institutionSheet = XLSX.utils.aoa_to_sheet(institutionData);
-            XLSX.utils.book_append_sheet(workbook, institutionSheet, 'معلومات عامة');
-            
-            // تحميل الملف
-            const fileName = `رائز_الاجتماعيات_${new Date().toLocaleDateString('ar-MA')}.xlsx`;
-            XLSX.writeFile(workbook, fileName);
-        }
+       // الحصول على نص النتيجة
+       function getResultText(score) {
+           if (score >= 75) return 'متحكم';
+           if (score >= 50) return 'متحكم نسبياً';
+           return 'غير متحكم';
+       }
 
-        // الحصول على نص النتيجة
-        function getResultText(score) {
-            if (score === null) return '-';
-            
-            const totalQuestions = 4;
-            const threshold1 = Math.ceil(totalQuestions * 0.7);
-            const threshold2 = Math.ceil(totalQuestions * 0.5);
-            
-            if (score >= threshold1) {
-                return 'متحكم';
-            } else if (score >= threshold2) {
-                return 'متحكم نسبياً';
-            } else {
-                return 'غير متحكم';
-            }
-        }
+       // عرض التحليلات
+       function showAnalytics() {
+           const collegeName = document.getElementById('collegeName').value || 'غير محدد';
+           const teacherName = document.getElementById('teacherName').value || 'غير محدد';
+           const className = document.getElementById('className').value || 'غير محدد';
+           
+           const analyticsContainer = document.getElementById('analyticsContainer');
+           const institutionInfo = document.getElementById('institutionInfo');
+           
+           institutionInfo.innerHTML = `
+               <p><strong>المؤسسة:</strong> ${collegeName}</p>
+               <p><strong>الأستاذ:</strong> ${teacherName}</p>
+               <p><strong>القسم:</strong> ${className}</p>
+               <p><strong>تاريخ التحليل:</strong> ${new Date().toLocaleDateString('ar-MA')}</p>
+           `;
+           
+           calculateCombinedStats();
+           createChart();
+           analyticsContainer.style.display = 'block';
+       }
 
-        // إظهار التحليل
-        function showAnalytics() {
-            if (students.length === 0) {
-                alert('لا توجد بيانات للتحليل');
-                return;
-            }
-            
-            calculateStatistics();
-            displayAnalytics();
-            document.getElementById('analyticsContainer').style.display = 'block';
-        }
+       // حساب الإحصائيات المجمعة
+       function calculateCombinedStats() {
+           const domains = ['cognitive', 'skills', 'emotional'];
+           const domainNames = {
+               cognitive: 'المعرفي',
+               skills: 'المهاري',
+               emotional: 'الوجداني'
+           };
+           
+           const tbody = document.getElementById('combinedStats');
+           tbody.innerHTML = '';
+           
+           domains.forEach(domain => {
+               const completed = students.filter(s => s[domain] !== null);
+               const controlled = completed.filter(s => s[domain] >= 75).length;
+               const partiallyControlled = completed.filter(s => s[domain] >= 50 && s[domain] < 75).length;
+               const notControlled = completed.filter(s => s[domain] < 50).length;
+               
+               const row = document.createElement('tr');
+               row.innerHTML = `
+                   <td>${domainNames[domain]}</td>
+                   <td>${controlled}</td>
+                   <td>${partiallyControlled}</td>
+                   <td>${notControlled}</td>
+                   <td>${completed.length}</td>
+               `;
+               tbody.appendChild(row);
+           });
+       }
 
-        // حساب الإحصائيات
-        function calculateStatistics() {
-            const domains = ['cognitive', 'skills', 'emotional'];
-            const stats = {};
-            
-            domains.forEach(domain => {
-                stats[domain] = {
-                    متحكم: 0,
-                    'متحكم نسبياً': 0,
-                    'غير متحكم': 0,
-                    'غير مُقيم': 0
-                };
-                
-                students.forEach(student => {
-                    const level = getResultText(student[domain]);
-                    if (level === '-') {
-                        stats[domain]['غير مُقيم']++;
-                    } else {
-                        stats[domain][level]++;
-                    }
-                });
-            });
-            
-            return stats;
-        }
+       // إنشاء الرسم البياني
+       function createChart() {
+           const ctx = document.getElementById('analyticsChart').getContext('2d');
+           
+           if (analyticsChart) {
+               analyticsChart.destroy();
+           }
+           
+           const domains = ['cognitive', 'skills', 'emotional'];
+           const domainNames = {
+               cognitive: 'المعرفي',
+               skills: 'المهاري',
+               emotional: 'الوجداني'
+           };
+           
+           const data = {
+               labels: domains.map(d => domainNames[d]),
+               datasets: [
+                   {
+                       label: 'متحكم',
+                       data: domains.map(domain => {
+                           const completed = students.filter(s => s[domain] !== null);
+                           return completed.filter(s => s[domain] >= 75).length;
+                       }),
+                       backgroundColor: '#27ae60',
+                       borderColor: '#27ae60',
+                       borderWidth: 2
+                   },
+                   {
+                       label: 'متحكم نسبياً',
+                       data: domains.map(domain => {
+                           const completed = students.filter(s => s[domain] !== null);
+                           return completed.filter(s => s[domain] >= 50 && s[domain] < 75).length;
+                       }),
+                       backgroundColor: '#f39c12',
+                       borderColor: '#f39c12',
+                       borderWidth: 2
+                   },
+                   {
+                       label: 'غير متحكم',
+                       data: domains.map(domain => {
+                           const completed = students.filter(s => s[domain] !== null);
+                           return completed.filter(s => s[domain] < 50).length;
+                       }),
+                       backgroundColor: '#e74c3c',
+                       borderColor: '#e74c3c',
+                       borderWidth: 2
+                   }
+               ]
+           };
+           
+           analyticsChart = new Chart(ctx, {
+               type: 'bar',
+               data: data,
+               options: {
+                   responsive: true,
+                   maintainAspectRatio: false,
+                   plugins: {
+                       title: {
+                           display: true,
+                           text: 'توزيع النتائج حسب المجالات',
+                           font: {
+                               size: 16
+                           }
+                       },
+                       legend: {
+                           position: 'top'
+                       }
+                   },
+                   scales: {
+                       y: {
+                           beginAtZero: true,
+                           ticks: {
+                               stepSize: 1
+                           }
+                       }
+                   }
+               }
+           });
+       }
 
-        // عرض التحليل
-        function displayAnalytics() {
-            const stats = calculateStatistics();
-            const totalStudents = students.length;
-            
-            // عرض معلومات المؤسسة
-            const institutionInfo = document.getElementById('institutionInfo');
-            institutionInfo.innerHTML = `
-                <p><strong>المؤسسة:</strong> ${document.getElementById('collegeName').value || 'غير محدد'}</p>
-                <p><strong>الأستاذ:</strong> ${document.getElementById('teacherName').value || 'غير محدد'}</p>
-                <p><strong>القسم:</strong> ${document.getElementById('className').value || 'غير محدد'}</p>
-                <p><strong>عدد التلاميذ:</strong> ${totalStudents}</p>
-                <p><strong>تاريخ التقرير:</strong> ${new Date().toLocaleDateString('ar-MA')}</p>
-            `;
-            
-            // عرض إحصائيات المجال المعرفي
-            displayDomainStats('cognitive', stats.cognitive, totalStudents);
-            displayDomainStats('skills', stats.skills, totalStudents);
-            displayDomainStats('emotional', stats.emotional, totalStudents);
-            
-            // إنشاء الرسم البياني
-            createChart(stats);
-        }
+       // إغلاق التحليلات
+       function closeAnalytics() {
+           document.getElementById('analyticsContainer').style.display = 'none';
+       }
 
-        // عرض إحصائيات المجال
-        function displayDomainStats(domain, stats, total) {
-            const domainMap = {
-                'cognitive': 'cognitiveStats',
-                'skills': 'skillsStats',
-                'emotional': 'emotionalStats'
-            };
-            
-            const tbody = document.getElementById(domainMap[domain]);
-            tbody.innerHTML = '';
-            
-            Object.entries(stats).forEach(([level, count]) => {
-                const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${level}</td>
-                    <td>${count}</td>
-                    <td>${percentage}%</td>
-                `;
-                tbody.appendChild(row);
-            });
-        }
+       // طباعة التحليل
+       function printAnalytics() {
+           window.print();
+       }
 
-        // إنشاء الرسم البياني
-        function createChart(stats) {
-            const ctx = document.getElementById('analyticsChart').getContext('2d');
-            
-            // إزالة الرسم البياني السابق إن وجد
-            if (analyticsChart) {
-                analyticsChart.destroy();
-            }
-            
-            const labels = ['متحكم', 'متحكم نسبياً', 'غير متحكم', 'غير مُقيم'];
-            const datasets = [
-                {
-                    label: 'المجال المعرفي',
-                    data: [
-                        stats.cognitive.متحكم,
-                        stats.cognitive['متحكم نسبياً'],
-                        stats.cognitive['غير متحكم'],
-                        stats.cognitive['غير مُقيم']
-                    ],
-                    backgroundColor: 'rgba(52, 152, 219, 0.8)',
-                    borderColor: 'rgba(52, 152, 219, 1)',
-                    borderWidth: 2
-                },
-                {
-                    label: 'المجال المهاري',
-                    data: [
-                        stats.skills.متحكم,
-                        stats.skills['متحكم نسبياً'],
-                        stats.skills['غير متحكم'],
-                        stats.skills['غير مُقيم']
-                    ],
-                    backgroundColor: 'rgba(39, 174, 96, 0.8)',
-                    borderColor: 'rgba(39, 174, 96, 1)',
-                    borderWidth: 2
-                },
-                {
-                    label: 'المجال الوجداني',
-                    data: [
-                        stats.emotional.متحكم,
-                        stats.emotional['متحكم نسبياً'],
-                        stats.emotional['غير متحكم'],
-                        stats.emotional['غير مُقيم']
-                    ],
-                    backgroundColor: 'rgba(155, 89, 182, 0.8)',
-                    borderColor: 'rgba(155, 89, 182, 1)',
-                    borderWidth: 2
-                }
-            ];
-            
-            analyticsChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: datasets
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        title: {
-                            display: true,
-                            text: 'توزيع النتائج حسب المجالات',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        legend: {
-                            display: true,
-                            position: 'top'
-                        }
-                    },
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        }
-                    }
-                }
-            });
-        }
+       // حفظ البيانات في localStorage
+       function saveData() {
+           const data = {
+               students: students,
+               collegeName: document.getElementById('collegeName').value,
+               teacherName: document.getElementById('teacherName').value,
+               className: document.getElementById('className').value
+           };
+           localStorage.setItem('socialStudiesQuiz', JSON.stringify(data));
+       }
 
-        // إغلاق التحليل
-        function closeAnalytics() {
-            document.getElementById('analyticsContainer').style.display = 'none';
-        }
+       // تحميل البيانات من localStorage
+       function loadData() {
+           const savedData = localStorage.getItem('socialStudiesQuiz');
+           if (savedData) {
+               const data = JSON.parse(savedData);
+               students = data.students || [];
+               document.getElementById('collegeName').value = data.collegeName || '';
+               document.getElementById('teacherName').value = data.teacherName || '';
+               document.getElementById('className').value = data.className || '';
+               updateStudentsTable();
+           }
+       }
 
-        // طباعة التحليل
-        function printAnalytics() {
-            window.print();
-        }
+       // تأخير حفظ البيانات لتحسين الأداء
+       let saveTimeout;
+       function debouncedSave() {
+           clearTimeout(saveTimeout);
+           saveTimeout = setTimeout(saveData, 1000);
+       }
 
-        // حفظ البيانات في localStorage
-        function saveData() {
-            const data = {
-                students: students,
-                collegeName: document.getElementById('collegeName').value,
-                teacherName: document.getElementById('teacherName').value,
-                className: document.getElementById('className').value
-            };
-            localStorage.setItem('socialStudiesQuiz', JSON.stringify(data));
-        }
+       // إضافة مستمع لحفظ البيانات عند تغيير معلومات المؤسسة
+       document.getElementById('collegeName').addEventListener('input', debouncedSave);
+       document.getElementById('teacherName').addEventListener('input', debouncedSave);
+       document.getElementById('className').addEventListener('input', debouncedSave);
 
-        // تحميل البيانات من localStorage
-        function loadData() {
-            const savedData = localStorage.getItem('socialStudiesQuiz');
-            if (savedData) {
-                const data = JSON.parse(savedData);
-                students = data.students || [];
-                document.getElementById('collegeName').value = data.collegeName || '';
-                document.getElementById('teacherName').value = data.teacherName || '';
-                document.getElementById('className').value = data.className || '';
-                updateStudentsTable();
-            }
-        }
+       // إضافة مستمع للضغط على Enter في حقل إدخال اسم التلميذ
+       document.getElementById('studentName').addEventListener('keypress', function(e) {
+           if (e.key === 'Enter') {
+               addStudent();
+           }
+       });
 
-        // تأخير حفظ البيانات لتحسين الأداء
-        let saveTimeout;
-        function debouncedSave() {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(saveData, 500);
-        }
+       // تحميل البيانات عند بدء التطبيق
+       document.addEventListener('DOMContentLoaded', function() {
+           loadData();
+       });
 
-        // حفظ البيانات عند تغيير الحقول
-        document.getElementById('collegeName').addEventListener('input', debouncedSave);
-        document.getElementById('teacherName').addEventListener('input', debouncedSave);
-        document.getElementById('className').addEventListener('input', debouncedSave);
-
-        // إضافة مستمع للضغط على Enter في حقل اسم التلميذ
-        document.getElementById('studentName').addEventListener('keypress', function(e) {
-            if (e.key === 'Enter') {
-                addStudent();
-            }
-        });
-
-        // تحميل البيانات عند تحميل الصفحة
-        window.addEventListener('load', loadData);
-
-        // حفظ البيانات عند إغلاق الصفحة
-        window.addEventListener('beforeunload', saveData);
-    </script>
+       // حفظ البيانات قبل إغلاق الصفحة
+       window.addEventListener('beforeunload', function() {
+           saveData();
+       });
+   </script>
 </body>
 </html>
