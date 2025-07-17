@@ -1,0 +1,1435 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>رائز مادة الاجتماعيات</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            font-size: 16px;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(45deg, #2c3e50, #3498db);
+            color: white;
+            padding: 20px 15px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .teacher-info {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .teacher-info input {
+            padding: 12px 15px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 25px;
+            background: rgba(255,255,255,0.1);
+            color: white;
+            font-size: 16px;
+            text-align: center;
+            width: 100%;
+        }
+
+        .teacher-info input::placeholder {
+            color: rgba(255,255,255,0.7);
+        }
+
+        .main-content {
+            padding: 20px 15px;
+        }
+
+        .add-student {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+
+        .add-student h3 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+        }
+
+        .add-student-form {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .add-student-form input {
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+        }
+
+        .add-student-form button {
+            padding: 15px 20px;
+            background: #27ae60;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background 0.3s;
+        }
+
+        .add-student-form button:hover {
+            background: #219a52;
+        }
+
+        .students-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            font-size: 14px;
+        }
+
+        .students-table th {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            color: white;
+            padding: 12px 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .students-table td {
+            padding: 12px 8px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+            font-size: 13px;
+        }
+
+        .students-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .action-btn {
+            padding: 8px 12px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+            margin: 2px;
+        }
+
+        .action-btn:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .action-btn.delete {
+            background: #e74c3c;
+        }
+
+        .action-btn.delete:hover {
+            background: #c0392b;
+        }
+
+        .result-badge {
+            padding: 4px 8px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: bold;
+            color: white;
+            display: inline-block;
+        }
+
+        .متحكم {
+            background: #27ae60;
+        }
+
+        .متحكم-نسبيا {
+            background: #f39c12;
+        }
+
+        .غير-متحكم {
+            background: #e74c3c;
+        }
+
+        .buttons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .export-btn, .analytics-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .export-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .export-btn:hover {
+            background: #219a52;
+            transform: translateY(-2px);
+        }
+
+        .analytics-btn {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .analytics-btn:hover {
+            background: #8e44ad;
+            transform: translateY(-2px);
+        }
+
+        .analytics-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .analytics-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            max-width: 800px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .analytics-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .analytics-header h2 {
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+
+        .stats-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .stats-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: white;
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .stats-table th {
+            background: linear-gradient(45deg, #34495e, #2c3e50);
+            color: white;
+            padding: 12px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .stats-table td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin: 20px 0;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .quiz-container {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+        }
+
+        .quiz-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 95%;
+            max-width: 600px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .quiz-header {
+            text-align: center;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+
+        .quiz-header h2 {
+            font-size: 1.3em;
+            margin-bottom: 10px;
+        }
+
+        .quiz-progress {
+            background: #ecf0f1;
+            height: 10px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .quiz-progress-bar {
+            height: 100%;
+            background: linear-gradient(45deg, #3498db, #2980b9);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        .question-container {
+            margin-bottom: 20px;
+        }
+
+        .question-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+
+        .question {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border-right: 4px solid #3498db;
+        }
+
+        .question h4 {
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 15px;
+        }
+
+        .options {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .option {
+            padding: 12px;
+            background: white;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .option:hover {
+            border-color: #3498db;
+            background: #f0f8ff;
+        }
+
+        .option.selected {
+            border-color: #3498db;
+            background: #3498db;
+            color: white;
+        }
+
+        .quiz-navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 20px;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+            flex: 1;
+        }
+
+        .prev-btn {
+            background: #95a5a6;
+            color: white;
+        }
+
+        .next-btn {
+            background: #3498db;
+            color: white;
+        }
+
+        .finish-btn {
+            background: #27ae60;
+            color: white;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            background: #e74c3c;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+        }
+
+        .domain-indicator {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            padding: 5px 10px;
+            background: #3498db;
+            color: white;
+            border-radius: 15px;
+            font-size: 12px;
+        }
+
+        .print-btn {
+            background: #e74c3c;
+            color: white;
+            padding: 15px 25px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 20px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+
+        .print-btn:hover {
+            background: #c0392b;
+            transform: translateY(-2px);
+        }
+
+        .domain-selection {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .domain-btn {
+            padding: 20px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 16px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+
+        .domain-btn.cognitive {
+            background: #3498db;
+            color: white;
+        }
+
+        .domain-btn.skills {
+            background: #27ae60;
+            color: white;
+        }
+
+        .domain-btn.emotional {
+            background: #9b59b6;
+            color: white;
+        }
+
+        .domain-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Print styles */
+        @media print {
+            body {
+                background: white;
+                font-size: 12px;
+            }
+
+            .analytics-container {
+                display: block !important;
+                position: static !important;
+                width: 100% !important;
+                height: auto !important;
+                background: white !important;
+                z-index: auto !important;
+            }
+
+            .analytics-content {
+                position: static !important;
+                transform: none !important;
+                width: 100% !important;
+                max-width: none !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                max-height: none !important;
+                overflow: visible !important;
+                box-shadow: none !important;
+            }
+
+            .close-btn, .print-btn {
+                display: none !important;
+            }
+
+            .chart-container {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+
+            .stats-table {
+                box-shadow: none !important;
+                border: 1px solid #ddd !important;
+            }
+
+            .analytics-header {
+                page-break-after: avoid;
+            }
+
+            .stats-grid {
+                page-break-inside: avoid;
+            }
+
+            .chart-container {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Responsive design for mobile */
+        @media (max-width: 768px) {
+            body {
+                font-size: 14px;
+            }
+
+            .header h1 {
+                font-size: 1.5em;
+            }
+
+            .students-table {
+                font-size: 12px;
+            }
+
+            .students-table th,
+            .students-table td {
+                padding: 8px 4px;
+            }
+
+            .action-btn {
+                padding: 6px 8px;
+                font-size: 11px;
+            }
+
+            .result-badge {
+                font-size: 10px;
+                padding: 3px 6px;
+            }
+
+            .quiz-content {
+                width: 98%;
+                padding: 15px;
+            }
+
+            .analytics-content {
+                width: 98%;
+                padding: 15px;
+            }
+
+            .chart-container {
+                height: 250px;
+                padding: 10px;
+            }
+
+            .nav-btn {
+                padding: 10px 15px;
+                font-size: 13px;
+            }
+        }
+
+        /* Very small screens */
+        @media (max-width: 480px) {
+            .students-table {
+                font-size: 11px;
+            }
+
+            .students-table th,
+            .students-table td {
+                padding: 6px 2px;
+            }
+
+            .action-btn {
+                padding: 4px 6px;
+                font-size: 10px;
+            }
+
+            .chart-container {
+                height: 200px;
+            }
+
+            .analytics-header h2 {
+                font-size: 1.2em;
+            }
+
+            .quiz-header h2 {
+                font-size: 1.1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>رائز مادة الاجتماعيات</h1>
+            <div class="teacher-info">
+                <input type="text" id="collegeName" placeholder="المؤسسة">                
+                <input type="text" id="teacherName" placeholder="اسم الأستاذ">
+                <input type="text" id="className" placeholder="القسم">
+            </div>
+        </div>
+
+        <div class="main-content">
+            <div class="add-student">
+                <h3>إضافة تلميذ جديد</h3>
+                <div class="add-student-form">
+                    <input type="text" id="studentName" placeholder="اسم التلميذ">
+                    <button onclick="addStudent()">إضافة</button>
+                </div>
+            </div>
+
+            <table class="students-table">
+                <thead>
+                    <tr>
+                        <th>اسم التلميذ</th>
+                        <th>المعرفي</th>
+                        <th>المهاري</th>
+                        <th>الوجداني</th>
+                        <th>الإجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="studentsTableBody">
+                </tbody>
+            </table>
+
+            <div class="buttons-container">
+                <button class="export-btn" onclick="exportToExcel()">تصدير النتائج إلى Excel</button>
+                <button class="analytics-btn" onclick="showAnalytics()">تحليل البيانات</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="quiz-container" id="quizContainer">
+        <div class="quiz-content">
+            <button class="close-btn" onclick="closeQuiz()">×</button>
+            <div class="domain-indicator" id="domainIndicator"></div>
+            <div class="quiz-header">
+                <h2 id="quizTitle"></h2>
+                <div class="quiz-progress">
+                    <div class="quiz-progress-bar" id="progressBar"></div>
+                </div>
+            </div>
+            <div id="quizQuestions"></div>
+            <div class="quiz-navigation">
+                <button class="nav-btn prev-btn" id="prevBtn" onclick="previousQuestion()">السابق</button>
+                <button class="nav-btn next-btn" id="nextBtn" onclick="nextQuestion()">التالي</button>
+                <button class="nav-btn finish-btn" id="finishBtn" onclick="finishQuiz()" style="display: none;">إنهاء الاختبار</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="analytics-container" id="analyticsContainer">
+        <div class="analytics-content" id="analyticsContent">
+            <button class="close-btn" onclick="closeAnalytics()">×</button>
+            <div class="analytics-header">
+                <h2>تحليل البيانات والإحصائيات</h2>
+                <div id="institutionInfo"></div>
+            </div>
+            <div class="stats-grid">
+                <div>
+                    <h3 style="text-align: center; margin-bottom: 15px; color: #2c3e50;">إحصائيات المجال المعرفي</h3>
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>المستوى</th>
+                                <th>العدد</th>
+                                <th>النسبة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cognitiveStats">
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3 style="text-align: center; margin-bottom: 15px; color: #2c3e50;">إحصائيات المجال المهاري</h3>
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>المستوى</th>
+                                <th>العدد</th>
+                                <th>النسبة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="skillsStats">
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3 style="text-align: center; margin-bottom: 15px; color: #2c3e50;">إحصائيات المجال الوجداني</h3>
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>المستوى</th>
+                                <th>العدد</th>
+                                <th>النسبة</th>
+                            </tr>
+                        </thead>
+                        <tbody id="emotionalStats">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="analyticsChart"></canvas>
+            </div>
+            <div style="text-align: center;">
+                <button class="print-btn" onclick="printAnalytics()">طباعة التحليل</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // بنك الأسئلة - يمكن إضافة المزيد هنا
+        const questionsBank = {
+            cognitive: [
+                {
+                    question: "ما هي عاصمة المغرب؟",
+                    options: ["الرباط", "الدار البيضاء", "فاس", "مراكش"],
+                    correct: 0
+                },
+                {
+                    question: "متى حصل المغرب على الاستقلال؟",
+                    options: ["1956", "1955", "1957", "1958"],
+                    correct: 0
+                },
+                {
+                    question: "ما هو أطول نهر في المغرب؟",
+                    options: ["نهر سبو", "نهر ملوية", "نهر أم الربيع", "نهر تانسيفت"],
+                    correct: 1
+                },
+                {
+                    question: "في أي قارة يقع المغرب؟",
+                    options: ["آسيا", "أفريقيا", "أوروبا", "أمريكا"],
+                    correct: 1
+                }
+            ],
+            skills: [
+                {
+                    question: "كيف تحلل خريطة جغرافية؟",
+                    options: [
+                        "قراءة مفتاح الخريطة وتحديد العناصر الرئيسية",
+                        "النظر إلى الألوان فقط",
+                        "قراءة العنوان فقط",
+                        "تجاهل المقياس"
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "ما هي أفضل طريقة لتنظيم معلومات تاريخية؟",
+                    options: [
+                        "إنشاء خط زمني",
+                        "حفظ التواريخ عشوائياً",
+                        "تجاهل التسلسل الزمني",
+                        "عدم تدوين المصادر"
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "عندما تقرأ نصاً تاريخياً، ما هي أول خطوة يجب اتباعها؟",
+                    options: [
+                        "تحديد مصدر النص وتاريخ كتابته",
+                        "قراءة النص بسرعة",
+                        "تجاهل العنوان",
+                        "البحث عن الأرقام فقط"
+                    ],
+                    correct: 0
+                },
+                {
+                    question: "كيف تميز بين الحقيقة والرأي في النص؟",
+                    options: [
+                        "الحقيقة يمكن إثباتها بالأدلة، والرأي يعبر عن وجهة نظر",
+                        "الحقيقة أطول من الرأي",
+                        "الرأي يحتوي على أرقام",
+                        "لا يمكن التمييز بينهما"
+                    ],
+                    correct: 0
+                }
+            ],
+            emotional: [
+                {
+                    question: "كيف تشعر عند دراسة التاريخ؟",
+                    options: ["متحمس ومهتم", "محايد", "غير مهتم", "أشعر بالملل"],
+                    correct: 0
+                },
+                {
+                    question: "ما مدى ثقتك في قدرتك على تحليل الخرائط؟",
+                    options: ["واثق جداً", "واثق نوعاً ما", "غير متأكد", "غير واثق"],
+                    correct: 0
+                },
+                {
+                    question: "هل تستمتع بالمشاركة في النقاشات حول المواضيع الاجتماعية؟",
+                    options: ["نعم، أحب المشاركة", "أحياناً", "نادراً", "لا أحب المشاركة"],
+                    correct: 0
+                },
+                {
+                    question: "كيف تتعامل مع الصعوبات في فهم الدروس؟",
+                    options: ["أسأل الأستاذ وأطلب المساعدة", "أحاول لوحدي", "أتجاهل الصعوبة", "أستسلم"],
+                    correct: 0
+                }
+            ]
+        };
+
+        let students = [];
+        let currentQuiz = null;
+        let currentStudentIndex = -1;
+        let currentQuestionIndex = 0;
+        let currentDomain = '';
+        let answers = [];
+        let randomizedQuestions = [];
+        let analyticsChart = null;
+
+        // دالة لخلط المصفوفة عشوائياً
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        // إضافة تلميذ جديد
+        function addStudent() {
+            const studentName = document.getElementById('studentName').value.trim();
+            if (!studentName) {
+                alert('يرجى إدخال اسم التلميذ');
+                return;
+            }
+
+            // التحقق من عدم وجود اسم مكرر
+            if (students.some(student => student.name === studentName)) {
+                alert('يوجد تلميذ بهذا الاسم بالفعل');
+                return;
+            }
+
+            const student = {
+                name: studentName,
+                cognitive: null,
+                skills: null,
+                emotional: null
+            };
+
+            students.push(student);
+            document.getElementById('studentName').value = '';
+            updateStudentsTable();
+            debouncedSave();
+        }
+
+        // تحديث جدول التلاميذ
+        function updateStudentsTable() {
+            const tbody = document.getElementById('studentsTableBody');
+            tbody.innerHTML = '';
+
+            students.forEach((student, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${student.name}</td>
+                    <td>${getResultBadge(student.cognitive)}</td>
+                    <td>${getResultBadge(student.skills)}</td>
+                    <td>${getResultBadge(student.emotional)}</td>
+                    <td>
+                        <button class="action-btn" onclick="startQuiz(${index})">إنجاز</button>
+                        <button class="action-btn delete" onclick="deleteStudent(${index})">حذف</button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // إنشاء شارة النتيجة
+        function getResultBadge(score) {
+            if (score === null) return '-';
+            
+            let level, className;
+            const totalQuestions = 4; // عدد الأسئلة لكل مجال
+            const threshold1 = Math.ceil(totalQuestions * 0.7); // 70% للمتحكم
+            const threshold2 = Math.ceil(totalQuestions * 0.5); // 50% للمتحكم نسبياً
+            
+            if (score >= threshold1) {
+                level = 'متحكم';
+                className = 'متحكم';
+            } else if (score >= threshold2) {
+                level = 'متحكم نسبياً';
+                className = 'متحكم-نسبيا';
+            } else {
+                level = 'غير متحكم';
+                className = 'غير-متحكم';
+            }
+            
+            return `<span class="result-badge ${className}">${level}</span>`;
+        }
+
+        // حذف تلميذ
+        function deleteStudent(index) {
+            if (confirm('هل تريد حذف هذا التلميذ؟')) {
+                students.splice(index, 1);
+                updateStudentsTable();
+                debouncedSave();
+            }
+        }
+
+        // بدء الاختبار
+        function startQuiz(studentIndex) {
+            currentStudentIndex = studentIndex;
+            showDomainSelection();
+        }
+
+        // إظهار اختيار المجال
+        function showDomainSelection() {
+            const quizContainer = document.getElementById('quizContainer');
+            const quizContent = document.querySelector('.quiz-content');
+            
+            quizContent.innerHTML = `
+                <button class="close-btn" onclick="closeQuiz()">×</button>
+                <div class="quiz-header">
+                    <h2>اختر المجال للتلميذ: ${students[currentStudentIndex].name}</h2>
+                </div>
+                <div class="domain-selection">
+                    <button class="domain-btn cognitive" onclick="selectDomain('cognitive')">
+                        المجال المعرفي
+                    </button>
+                    <button class="domain-btn skills" onclick="selectDomain('skills')">
+                        المجال المهاري
+                    </button>
+                    <button class="domain-btn emotional" onclick="selectDomain('emotional')">
+                        المجال الوجداني
+                    </button>
+                </div>
+            `;
+            
+            quizContainer.style.display = 'block';
+        }
+
+        // اختيار المجال
+        function selectDomain(domain) {
+            currentDomain = domain;
+            currentQuestionIndex = 0;
+            answers = [];
+            
+            // خلط الأسئلة عشوائياً
+            randomizedQuestions = shuffleArray(questionsBank[domain]);
+            
+            setupQuiz();
+            displayQuestion();
+        }
+
+        // إعداد الاختبار
+        function setupQuiz() {
+            const quizContainer = document.getElementById('quizContainer');
+            const quizContent = document.querySelector('.quiz-content');
+            
+            let domainName = '';
+            switch(currentDomain) {
+                case 'cognitive': domainName = 'المجال المعرفي'; break;
+                case 'skills': domainName = 'المجال المهاري'; break;
+                case 'emotional': domainName = 'المجال الوجداني'; break;
+            }
+            
+            quizContent.innerHTML = `
+                <button class="close-btn" onclick="closeQuiz()">×</button>
+                <div class="domain-indicator" id="domainIndicator">${domainName}</div>
+                <div class="quiz-header">
+                    <h2 id="quizTitle">اختبار ${domainName} - ${students[currentStudentIndex].name}</h2>
+                    <div class="quiz-progress">
+                        <div class="quiz-progress-bar" id="progressBar"></div>
+                    </div>
+                </div>
+                <div id="quizQuestions"></div>
+                <div class="quiz-navigation">
+                    <button class="nav-btn prev-btn" id="prevBtn" onclick="previousQuestion()">السابق</button>
+                    <button class="nav-btn next-btn" id="nextBtn" onclick="nextQuestion()">التالي</button>
+                    <button class="nav-btn finish-btn" id="finishBtn" onclick="finishQuiz()" style="display: none;">إنهاء الاختبار</button>
+                </div>
+            `;
+            
+            quizContainer.style.display = 'block';
+        }
+
+        // عرض السؤال
+        function displayQuestion() {
+            const questionsContainer = document.getElementById('quizQuestions');
+            const question = randomizedQuestions[currentQuestionIndex];
+            
+            questionsContainer.innerHTML = `
+                <div class="question-container">
+                    <div class="question-title">السؤال ${currentQuestionIndex + 1} من ${randomizedQuestions.length}</div>
+                    <div class="question">
+                        <h4>${question.question}</h4>
+                        <div class="options">
+                            ${question.options.map((option, index) => `
+                                <div class="option" onclick="selectOption(${index})" data-index="${index}">
+                                    ${option}
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // تحديث شريط التقدم
+            const progress = ((currentQuestionIndex + 1) / randomizedQuestions.length) * 100;
+            document.getElementById('progressBar').style.width = progress + '%';
+            
+            // تحديث أزرار التنقل
+            document.getElementById('prevBtn').disabled = currentQuestionIndex === 0;
+            document.getElementById('nextBtn').style.display = currentQuestionIndex === randomizedQuestions.length - 1 ? 'none' : 'block';
+            document.getElementById('finishBtn').style.display = currentQuestionIndex === randomizedQuestions.length - 1 ? 'block' : 'none';
+            
+            // إظهار الإجابة المحددة سابقاً إن وجدت
+            if (answers[currentQuestionIndex] !== undefined) {
+                const selectedOption = document.querySelector(`[data-index="${answers[currentQuestionIndex]}"]`);
+                if (selectedOption) {
+                    selectedOption.classList.add('selected');
+                }
+            }
+        }
+
+        // اختيار الإجابة
+        function selectOption(optionIndex) {
+            // إزالة التحديد السابق
+            document.querySelectorAll('.option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            
+            // تحديد الإجابة الجديدة
+            document.querySelector(`[data-index="${optionIndex}"]`).classList.add('selected');
+            
+            // حفظ الإجابة
+            answers[currentQuestionIndex] = optionIndex;
+        }
+
+        // السؤال التالي
+        function nextQuestion() {
+            if (currentQuestionIndex < randomizedQuestions.length - 1) {
+                currentQuestionIndex++;
+                displayQuestion();
+            }
+        }
+
+        // السؤال السابق
+        function previousQuestion() {
+            if (currentQuestionIndex > 0) {
+                currentQuestionIndex--;
+                displayQuestion();
+            }
+        }
+
+        // إنهاء الاختبار
+        function finishQuiz() {
+            // حساب النتيجة
+            let score = 0;
+            for (let i = 0; i < answers.length; i++) {
+                if (answers[i] === randomizedQuestions[i].correct) {
+                    score++;
+                }
+            }
+            
+            // حفظ النتيجة
+            students[currentStudentIndex][currentDomain] = score;
+            
+            // إظهار النتيجة
+            alert(`تم الانتهاء من الاختبار!\nالنتيجة: ${score} من ${randomizedQuestions.length}`);
+            
+            closeQuiz();
+            updateStudentsTable();
+            debouncedSave();
+        }
+
+        // إغلاق الاختبار
+        function closeQuiz() {
+            document.getElementById('quizContainer').style.display = 'none';
+            currentQuiz = null;
+            currentStudentIndex = -1;
+            currentQuestionIndex = 0;
+            currentDomain = '';
+            answers = [];
+            randomizedQuestions = [];
+        }
+
+        // تصدير إلى Excel
+        function exportToExcel() {
+            const workbook = XLSX.utils.book_new();
+            
+            // إعداد البيانات
+            const data = [
+                ['اسم التلميذ', 'المجال المعرفي', 'المجال المهاري', 'المجال الوجداني', 'مستوى المعرفي', 'مستوى المهاري', 'مستوى الوجداني']
+            ];
+            
+            students.forEach(student => {
+                data.push([
+                    student.name,
+                    student.cognitive !== null ? student.cognitive : '-',
+                    student.skills !== null ? student.skills : '-',
+                    student.emotional !== null ? student.emotional : '-',
+                    getResultText(student.cognitive),
+                    getResultText(student.skills),
+                    getResultText(student.emotional)
+                ]);
+            });
+            
+            // إنشاء الورقة
+            const worksheet = XLSX.utils.aoa_to_sheet(data);
+            XLSX.utils.book_append_sheet(workbook, worksheet, 'النتائج');
+            
+            // إضافة معلومات الأستاذ والقسم
+            const institutionData = [
+                ['المؤسسة', document.getElementById('collegeName').value || '-'],
+                ['الأستاذ', document.getElementById('teacherName').value || '-'],
+                ['القسم', document.getElementById('className').value || '-'],
+                ['تاريخ التصدير', new Date().toLocaleDateString('ar-MA')]
+            ];
+            
+            const institutionSheet = XLSX.utils.aoa_to_sheet(institutionData);
+            XLSX.utils.book_append_sheet(workbook, institutionSheet, 'معلومات عامة');
+            
+            // تحميل الملف
+            const fileName = `رائز_الاجتماعيات_${new Date().toLocaleDateString('ar-MA')}.xlsx`;
+            XLSX.writeFile(workbook, fileName);
+        }
+
+        // الحصول على نص النتيجة
+        function getResultText(score) {
+            if (score === null) return '-';
+            
+            const totalQuestions = 4;
+            const threshold1 = Math.ceil(totalQuestions * 0.7);
+            const threshold2 = Math.ceil(totalQuestions * 0.5);
+            
+            if (score >= threshold1) {
+                return 'متحكم';
+            } else if (score >= threshold2) {
+                return 'متحكم نسبياً';
+            } else {
+                return 'غير متحكم';
+            }
+        }
+
+        // إظهار التحليل
+        function showAnalytics() {
+            if (students.length === 0) {
+                alert('لا توجد بيانات للتحليل');
+                return;
+            }
+            
+            calculateStatistics();
+            displayAnalytics();
+            document.getElementById('analyticsContainer').style.display = 'block';
+        }
+
+        // حساب الإحصائيات
+        function calculateStatistics() {
+            const domains = ['cognitive', 'skills', 'emotional'];
+            const stats = {};
+            
+            domains.forEach(domain => {
+                stats[domain] = {
+                    متحكم: 0,
+                    'متحكم نسبياً': 0,
+                    'غير متحكم': 0,
+                    'غير مُقيم': 0
+                };
+                
+                students.forEach(student => {
+                    const level = getResultText(student[domain]);
+                    if (level === '-') {
+                        stats[domain]['غير مُقيم']++;
+                    } else {
+                        stats[domain][level]++;
+                    }
+                });
+            });
+            
+            return stats;
+        }
+
+        // عرض التحليل
+        function displayAnalytics() {
+            const stats = calculateStatistics();
+            const totalStudents = students.length;
+            
+            // عرض معلومات المؤسسة
+            const institutionInfo = document.getElementById('institutionInfo');
+            institutionInfo.innerHTML = `
+                <p><strong>المؤسسة:</strong> ${document.getElementById('collegeName').value || 'غير محدد'}</p>
+                <p><strong>الأستاذ:</strong> ${document.getElementById('teacherName').value || 'غير محدد'}</p>
+                <p><strong>القسم:</strong> ${document.getElementById('className').value || 'غير محدد'}</p>
+                <p><strong>عدد التلاميذ:</strong> ${totalStudents}</p>
+                <p><strong>تاريخ التقرير:</strong> ${new Date().toLocaleDateString('ar-MA')}</p>
+            `;
+            
+            // عرض إحصائيات المجال المعرفي
+            displayDomainStats('cognitive', stats.cognitive, totalStudents);
+            displayDomainStats('skills', stats.skills, totalStudents);
+            displayDomainStats('emotional', stats.emotional, totalStudents);
+            
+            // إنشاء الرسم البياني
+            createChart(stats);
+        }
+
+        // عرض إحصائيات المجال
+        function displayDomainStats(domain, stats, total) {
+            const domainMap = {
+                'cognitive': 'cognitiveStats',
+                'skills': 'skillsStats',
+                'emotional': 'emotionalStats'
+            };
+            
+            const tbody = document.getElementById(domainMap[domain]);
+            tbody.innerHTML = '';
+            
+            Object.entries(stats).forEach(([level, count]) => {
+                const percentage = total > 0 ? ((count / total) * 100).toFixed(1) : 0;
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${level}</td>
+                    <td>${count}</td>
+                    <td>${percentage}%</td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        // إنشاء الرسم البياني
+        function createChart(stats) {
+            const ctx = document.getElementById('analyticsChart').getContext('2d');
+            
+            // إزالة الرسم البياني السابق إن وجد
+            if (analyticsChart) {
+                analyticsChart.destroy();
+            }
+            
+            const labels = ['متحكم', 'متحكم نسبياً', 'غير متحكم', 'غير مُقيم'];
+            const datasets = [
+                {
+                    label: 'المجال المعرفي',
+                    data: [
+                        stats.cognitive.متحكم,
+                        stats.cognitive['متحكم نسبياً'],
+                        stats.cognitive['غير متحكم'],
+                        stats.cognitive['غير مُقيم']
+                    ],
+                    backgroundColor: 'rgba(52, 152, 219, 0.8)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'المجال المهاري',
+                    data: [
+                        stats.skills.متحكم,
+                        stats.skills['متحكم نسبياً'],
+                        stats.skills['غير متحكم'],
+                        stats.skills['غير مُقيم']
+                    ],
+                    backgroundColor: 'rgba(39, 174, 96, 0.8)',
+                    borderColor: 'rgba(39, 174, 96, 1)',
+                    borderWidth: 2
+                },
+                {
+                    label: 'المجال الوجداني',
+                    data: [
+                        stats.emotional.متحكم,
+                        stats.emotional['متحكم نسبياً'],
+                        stats.emotional['غير متحكم'],
+                        stats.emotional['غير مُقيم']
+                    ],
+                    backgroundColor: 'rgba(155, 89, 182, 0.8)',
+                    borderColor: 'rgba(155, 89, 182, 1)',
+                    borderWidth: 2
+                }
+            ];
+            
+            analyticsChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'توزيع النتائج حسب المجالات',
+                            font: {
+                                size: 16
+                            }
+                        },
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        // إغلاق التحليل
+        function closeAnalytics() {
+            document.getElementById('analyticsContainer').style.display = 'none';
+        }
+
+        // طباعة التحليل
+        function printAnalytics() {
+            window.print();
+        }
+
+        // حفظ البيانات في localStorage
+        function saveData() {
+            const data = {
+                students: students,
+                collegeName: document.getElementById('collegeName').value,
+                teacherName: document.getElementById('teacherName').value,
+                className: document.getElementById('className').value
+            };
+            localStorage.setItem('socialStudiesQuiz', JSON.stringify(data));
+        }
+
+        // تحميل البيانات من localStorage
+        function loadData() {
+            const savedData = localStorage.getItem('socialStudiesQuiz');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                students = data.students || [];
+                document.getElementById('collegeName').value = data.collegeName || '';
+                document.getElementById('teacherName').value = data.teacherName || '';
+                document.getElementById('className').value = data.className || '';
+                updateStudentsTable();
+            }
+        }
+
+        // تأخير حفظ البيانات لتحسين الأداء
+        let saveTimeout;
+        function debouncedSave() {
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(saveData, 500);
+        }
+
+        // حفظ البيانات عند تغيير الحقول
+        document.getElementById('collegeName').addEventListener('input', debouncedSave);
+        document.getElementById('teacherName').addEventListener('input', debouncedSave);
+        document.getElementById('className').addEventListener('input', debouncedSave);
+
+        // إضافة مستمع للضغط على Enter في حقل اسم التلميذ
+        document.getElementById('studentName').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addStudent();
+            }
+        });
+
+        // تحميل البيانات عند تحميل الصفحة
+        window.addEventListener('load', loadData);
+
+        // حفظ البيانات عند إغلاق الصفحة
+        window.addEventListener('beforeunload', saveData);
+    </script>
+</body>
+</html>
